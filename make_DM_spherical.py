@@ -147,7 +147,7 @@ unit_DM_spherical = unit_DM #for some reason need offset to match cartesian valu
 unit_NH_spherical  = unit_NH
 
 data = loadData(path_input, snum, spectrum = False, \
-                                                    xlen = xlen, depth = depth, test=False, edgeon = False)
+                                                    xlen = xlen, depth = depth, edgeon = False)
 
 
 Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
