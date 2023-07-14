@@ -8,6 +8,7 @@ from gizmopy.quicklook import *
 from weighted_2D_map import *
 import astropy.units as u
 from astropy.coordinates import cartesian_to_spherical
+import sys
 
 def center_and_clip_mod(xyz,center_xyz,r_cut):
     '''
@@ -137,8 +138,11 @@ def loadData(path_input, snum, spectrum=False, xlen=30, depth=200, edgeon=False)
 
 if __name__ == '__main__':
 
-    path_input = '/panfs/ds09/hopkins/sponnada/m12i/'
-    # path_input = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
+    if len(sys.argv) != 2:
+        sys.exit('Usage: %s dataset' % sys.argv[0])
+    fn = sys.argv[1]
+    # fn = '/panfs/ds09/hopkins/sponnada/m12i/'
+    # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
     snum = 600
     xlen = 100
     depth = 100
@@ -148,8 +152,7 @@ if __name__ == '__main__':
     unit_DM_spherical = unit_DM #for some reason need offset to match cartesian values - check with Phil
     unit_NH_spherical  = unit_NH
 
-    magx,magy,magz,data = loadData(path_input, snum, spectrum = False, \
-                                                    xlen = xlen, depth = depth, test=False, edgeon = False)
+    magx,magy,magz,data = loadData(fn, snum, spectrum = False, xlen = xlen, depth = depth, edgeon = False)
 
 
     Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
