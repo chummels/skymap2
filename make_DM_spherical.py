@@ -146,7 +146,7 @@ unit_DM = unit_NH/3e18
 unit_DM_spherical = unit_DM #for some reason need offset to match cartesian values - check with Phil
 unit_NH_spherical  = unit_NH
 
-magx,magy,magz,data = loadData(path_input, snum, spectrum = False, \
+data = loadData(path_input, snum, spectrum = False, \
                                                     xlen = xlen, depth = depth, test=False, edgeon = False)
 
 
