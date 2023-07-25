@@ -144,8 +144,8 @@ if __name__ == '__main__':
     # fn = '/panfs/ds09/hopkins/sponnada/m12i/'
     # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
     snum = 600
-    xlen = 100
-    depth = 100
+    xlen = 200
+    depth = 200
 
     unit_NH = 1.248e24
     unit_DM = unit_NH/3e18
@@ -155,9 +155,9 @@ if __name__ == '__main__':
     data = loadData(fn, snum, spectrum = False, xlen = xlen, depth = depth, edgeon = False)
 
 
-    Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
+    Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][1], data['hsml'],
                                         data['mass']*data['x_e'], data['mass']*data['x_h'],
-                                        xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+                                        xlen=20, set_aspect_ratio=1.0, pixels=512)
 
     np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
 
@@ -166,21 +166,23 @@ if __name__ == '__main__':
 
     plt.figure()
     plt.imshow(np.log10(Ne.T*unit_DM),
-               extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+               #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+               extent=[-10, 10, -10, 10], cmap='inferno')
     plt.xlabel(r'x [kpc]')
-    plt.ylabel(r'z [kpc]')
+    plt.ylabel(r'y [kpc]')
     plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
     plt.savefig('Ne_{}_kpc_{}_depth.png'.format(xlen, depth))
 
     plt.figure()
     plt.imshow(np.log10(NH.T*unit_NH),
-               extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+               #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+               extent=[-10, 10, -10, 10], cmap='inferno')
     plt.xlabel(r'x [kpc]')
-    plt.ylabel(r'z [kpc]')
+    plt.ylabel(r'y [kpc]')
     plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
     plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
 
-    solar_circ_vec = np.array([100,0,0])
+    solar_circ_vec = np.array([0,8,0])
 
     #xyz centered on a point in Solar Circle
     xs = data['xyz'][0] - solar_circ_vec[0]
@@ -189,7 +191,7 @@ if __name__ == '__main__':
 
     cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
-    filter_r = [200]
+    filter_r = [10, 200]
 
     radial_filters = [np.where(cartesian_radii < i) for i in filter_r]
 
@@ -200,9 +202,6 @@ if __name__ == '__main__':
         r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
 
         lon -= np.pi*u.rad
-
-        print(np.nanmin(lat),np.nanmax(lat))
-        print(np.nanmin(lon), np.nanmax(lon))
 
         Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             data['mass'][filt]*data['x_e'][filt]/(r**2), data['mass'][filt]*data['x_h'][filt]/(r**2), xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
@@ -223,5 +222,5 @@ if __name__ == '__main__':
                    np.pi, -np.pi/2, np.pi/2], cmap='inferno')
         plt.ylabel(r'latitude [rad]')
         plt.xlabel(r'longitude [rad]')
-        plt.colorbar(label=r'log$_{10}$ NH [cm$^{-2}$]')
+        plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
         plt.savefig('NH_{}_kpc_{}_depth_spherical_{}.png'.format(xlen, depth,filter_r[x]))
