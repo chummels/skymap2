@@ -136,8 +136,9 @@ def loadData(path_input, snum, spectrum=False, xlen=30, depth=200, edgeon=False)
 
     return data
 
+
 def B_spherical(data,filt):
-    '''Given a dictionary containing at least the position and magnetic field data, return the spherical (r,phi,theta) components'''
+    '''Given a dictionary containing at least the position and magnetic field data, return the spherical (r,theta,phi) components'''
     pos = data['xyz'].T[filt].T
     rs = np.linalg.norm(pos,axis=0)
     B_spherical = []
@@ -145,12 +146,15 @@ def B_spherical(data,filt):
     for i in range(len(pos[0])):
         y = pos[1][i]; x = pos[0][i]; z = pos[2][i]
         r = rs[i]
-        spherical_transform_matrix = np.array([[x/r,y/r, z/r ], 
-                                                    [(-x*z)/(r**2*np.sqrt(np.power(x,2)+np.power(y,2))), (-y*z)/(np.power(r,2)*np.sqrt(np.power(x,2)+np.power(y,2))), -np.sqrt(np.power(x,2)+np.power(y,2))/np.power(r,2)], 
-                                                    [-y/(np.power(x,2)+np.power(y,2)),x/(np.power(x,2)+np.power(y,2)),0]])
+        theta = np.arctan2(np.sqrt(np.power(x,2)+np.power(y,2)),z)
+        phi = np.arctan2(y,x)
+        spherical_transform_matrix = np.array([[np.sin(theta)*np.cos(phi),np.sin(theta)*np.sin(phi),np.cos(theta)],
+                                               [np.cos(theta)*np.cos(phi),np.cos(theta)*np.sin(phi),-np.sin(theta)],
+                                               [-np.sin(phi),np.cos(phi),0]])
 
         B_spherical.append( np.dot(spherical_transform_matrix,data['Bxyz'].T[filt][i]))
     return(np.array(B_spherical).T)
+
    
 
 if __name__ == '__main__':
@@ -223,7 +227,7 @@ if __name__ == '__main__':
 
     cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
-    filter_r = [10, 200]
+    filter_r = [10,200]
 
     if TF is not None:
         radial_filters = [np.where((cartesian_radii < i) & (data['T'] > 10**5.5)) for i in filter_r]
@@ -235,8 +239,10 @@ if __name__ == '__main__':
         filt = radial_filters[x]
 
         r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
-        B_sph = B_spherical(data,filt)
+        B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
         Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
+        print(np.linalg.norm(B_sph,axis=0)/np.linalg.norm(data['Bxyz'].T[filt].T*1e6,axis=0))
+        print('Br {}'.format(np.mean(Br)))
 
         lon -= np.pi*u.rad
 
