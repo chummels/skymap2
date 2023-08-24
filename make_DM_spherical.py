@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
 
-    np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
+    np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
 
 
     plt.figure()
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
     plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
 
-    solar_circ_vec = np.array([100,0,0])
+    solar_circ_vec = np.array([8.5,0,0])
 
     #xyz centered on a point in Solar Circle
     xs = data['xyz'][0] - solar_circ_vec[0]
@@ -213,7 +213,7 @@ if __name__ == '__main__':
                                             data['mass'][filt]*data['x_e'][filt]/(r**2), data['mass'][filt]*data['x_h'][filt]/(r**2),Br*data['mass'][filt]*data['x_e'][filt]/(r**2), xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
 
         np.save('Ne_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical)
-        np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_RM)
+        np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM)
         np.save('NH_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical)
 
 
