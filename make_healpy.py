@@ -25,14 +25,23 @@ if name.startswith('NH'):
     cbtext = 'log($N_{H}$ [$cm^{-2}$])'
     cmap = mpl.cm.viridis
     cmap = mpl.cm.inferno
+    norm = 'log'
 if name.startswith('Ne'):
     mi = 1e0
     ma = 1e3
     cbtext = 'log(DM [$pc \cdot cm^{-3}$])'
     cmap = mpl.cm.inferno
+    norm = 'log'
+if name.startswith('RM'):
+    mi = -1e2
+    ma = 1e2
+    cbtext = 'log(RM)'
+    cmap = mpl.cm.bwr
+    norm = None
 
 # Automatically get the array size from the loaded numpy array
 struct = np.load(fn)
+print('Min = %g' % np.min(struct))
 print('Max = %g' % np.max(struct))
 print('Mean = %g' % np.mean(struct))
 print('Median = %g' % np.median(struct))
@@ -58,16 +67,16 @@ m[pixel_indices] = struct
 m.clip(mi, ma, out=m)
 
 # Plot as Mollweide projection
-#hp.mollview(m, fig=fig, norm='log', title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
-#hp.mollview(m, fig=fig, norm='log', title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
 # x=8
-hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
+hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
 # x=-8
-#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
 # y=8
-#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
 # y=-8
-#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
 
 # Make colorbar better
 cb = fig.get_axes()[1]
