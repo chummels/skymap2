@@ -79,13 +79,14 @@ hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), f
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
 
 # Make colorbar better
-cb = fig.get_axes()[1]
-#ticks = np.logspace(np.log10(m.min()), np.log10(m.max()), 4, endpoint=True)
-ticks = np.logspace(np.log10(mi), np.log10(ma), 4, endpoint=True)
-cb.set_xticks(ticks)
-logticks = ['%2.1f' % tick for tick in np.log10(ticks)]
-cb.set_xticklabels(logticks)
-cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
+if norm == 'log':
+    cb = fig.get_axes()[1]
+    #ticks = np.logspace(np.log10(m.min()), np.log10(m.max()), 4, endpoint=True)
+    ticks = np.logspace(np.log10(mi), np.log10(ma), 4, endpoint=True)
+    cb.set_xticks(ticks)
+    logticks = ['%2.1f' % tick for tick in np.log10(ticks)]
+    cb.set_xticklabels(logticks)
+    cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
 
 # Add text
 fig = plt.gcf()
