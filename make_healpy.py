@@ -35,7 +35,7 @@ if name.startswith('Ne'):
 if name.startswith('RM'):
     mi = -1e2
     ma = 1e2
-    cbtext = 'log(RM)'
+    cbtext = 'log(RM [$rad \cdot m^{-2}$])'
     cmap = mpl.cm.bwr
     norm = None
 
