@@ -182,22 +182,31 @@ if __name__ == '__main__':
     # TF = np.where(data['T']>10**5.5)
 
     if TF is not None:
-        Ne, NH, RM = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
                                             data['mass'][TF]*data['x_e'][TF], data['mass'][TF]*data['x_h'][TF],
                                             data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
     else:
-        Ne, NH, RM = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
+        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
                                             data['mass']*data['x_e'], 
                                             data['mass']*data['x_h'],
-                                            data['mass']*data['x_e']*data['Bxyz'][2],
                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
 
     np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
 
     np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
 
-    np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
+    if 'Bxyz' in data.keys():
+        if TF is None:
+            RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+                                            data['mass']*data['x_e']*data['Bxyz'][2], xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+            np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)                                            
+        else:  
+            RM_TF, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+                                             data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF], 
+                                            xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+
+            np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
 
 
     plt.figure()
@@ -239,21 +248,22 @@ if __name__ == '__main__':
         filt = radial_filters[x]
 
         r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
-        B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
-        Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
-        print(np.linalg.norm(B_sph,axis=0)/np.linalg.norm(data['Bxyz'].T[filt].T*1e6,axis=0))
-        print('Br {}'.format(np.mean(Br)))
+        if 'Bxyz' in data.keys():
+            B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
+            Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
+
 
         lon -= np.pi*u.rad
 
-        Ne, NH, RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+        Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             data['mass'][filt]*data['x_e'][filt]/(r**2), 
-                                            data['mass'][filt]*data['x_h'][filt]/(r**2),
-                                            Br*data['mass'][filt]*data['x_e'][filt]/(r**2), 
+                                            data['mass'][filt]*data['x_h'][filt]/(r**2), 
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+        if 'Bxyz' in data.keys():
+           RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r, Br*data['mass'][filt]*data['x_e'][filt]/(r**2), xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+           np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM)
 
         np.save('Ne_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical)
-        np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM)
         np.save('NH_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical)
 
 
