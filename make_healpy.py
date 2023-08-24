@@ -60,8 +60,14 @@ m.clip(mi, ma, out=m)
 # Plot as Mollweide projection
 #hp.mollview(m, fig=fig, norm='log', title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
 #hp.mollview(m, fig=fig, norm='log', title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
-#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
-hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
+# x=8
+hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
+# x=-8
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
+# y=8
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
+# y=-8
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm='log', title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
 
 # Make colorbar better
 cb = fig.get_axes()[1]
@@ -75,7 +81,9 @@ cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
 # Add text
 fig = plt.gcf()
 text = '10 kpc'
-fig.text(0.05, 0.89, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
+fig.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
+text2 = 'x=8'
+fig.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
 plt.savefig('%s_healpy.png' % name)
 
 plt.clf()
@@ -87,6 +95,8 @@ norm = counts / struct.size # PDF
 ax.stairs(norm, bins, color='k', fill=True)
 ax.set_yscale('log')
 ax.set_ylabel('PDF')
+ax.set_ylim(1e-6,1e-1)
 ax.set_xlabel('log(DM (pc cm$^{-3}$))')
-ax.text(0.05, 0.89, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
 plt.savefig('%s_pdf.png' % name)
