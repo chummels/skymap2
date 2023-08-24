@@ -136,6 +136,23 @@ def loadData(path_input, snum, spectrum=False, xlen=30, depth=200, edgeon=False)
 
     return data
 
+def B_spherical(data,filt):
+    '''Given a dictionary containing at least the position and magnetic field data, return the spherical (r,phi,theta) components'''
+    pos = data['xyz'].T[filt].T
+    rs = np.linalg.norm(pos,axis=0)
+    B_spherical = []
+
+    for i in range(len(pos[0])):
+        y = pos[1][i]; x = pos[0][i]; z = pos[2][i]
+        r = rs[i]
+        spherical_transform_matrix = np.array([[x/r,y/r, z/r ], 
+                                                    [(-x*z)/(r**2*np.sqrt(np.power(x,2)+np.power(y,2))), (-y*z)/(np.power(r,2)*np.sqrt(np.power(x,2)+np.power(y,2))), -np.sqrt(np.power(x,2)+np.power(y,2))/np.power(r,2)], 
+                                                    [-y/(np.power(x,2)+np.power(y,2)),x/(np.power(x,2)+np.power(y,2)),0]])
+
+        B_spherical.append( np.dot(spherical_transform_matrix,data['Bxyz'].T[filt][i]))
+    return(np.array(B_spherical).T)
+   
+
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
@@ -218,7 +235,8 @@ if __name__ == '__main__':
         filt = radial_filters[x]
 
         r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
-        Br, Bphi, Btheta = cartesian_to_spherical(data['Bxyz'][0][filt], data['Bxyz'][1][filt], data['Bxyz'][2][filt])
+        B_sph = B_spherical(data,filt)
+        Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
 
         lon -= np.pi*u.rad
 
