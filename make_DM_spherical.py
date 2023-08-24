@@ -149,8 +149,10 @@ if __name__ == '__main__':
 
     unit_NH = 1.248e24
     unit_DM = unit_NH/3e18
-    unit_DM_spherical = unit_DM #for some reason need offset to match cartesian values - check with Phil
+
+    unit_DM_spherical = unit_DM 
     unit_NH_spherical  = unit_NH
+    unit_RM = 3.2855e5 # rad/m^2 conversion, the unit is .808 * 1000 * 404.621
 
     data = loadData(fn, snum, spectrum = False, xlen = xlen, depth = depth, edgeon = False)
 
@@ -159,17 +161,22 @@ if __name__ == '__main__':
     # TF = np.where(data['T']>10**5.5)
 
     if TF is not None:
-        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+        Ne, NH, RM = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
                                             data['mass'][TF]*data['x_e'][TF], data['mass'][TF]*data['x_h'][TF],
-                                            xlen=20, set_aspect_ratio=1.0, pixels=512)
+                                            data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
+                                            xlen=xlen, set_aspect_ratio=1.0, pixels=512)
     else:
-        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][1], data['hsml'],
-                                            data['mass']*data['x_e'], data['mass']*data['x_h'],
-                                            xlen=20, set_aspect_ratio=1.0, pixels=512)
+        Ne, NH, RM = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
+                                            data['mass']*data['x_e'], 
+                                            data['mass']*data['x_h'],
+                                            data['mass']*data['x_e']*data['Bxyz'][2],
+                                            xlen=xlen, set_aspect_ratio=1.0, pixels=512)
 
     np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
 
     np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
+
+    np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
 
 
     plt.figure()
@@ -211,15 +218,18 @@ if __name__ == '__main__':
         filt = radial_filters[x]
 
         r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
+        Br, Bphi, Btheta = cartesian_to_spherical(data['Bxyz'][0][filt], data['Bxyz'][1][filt], data['Bxyz'][2][filt])
 
         lon -= np.pi*u.rad
 
-        Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                            data['mass'][filt]*data['x_e'][filt]/(r**2),
+        Ne, NH, RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                            data['mass'][filt]*data['x_e'][filt]/(r**2), 
                                             data['mass'][filt]*data['x_h'][filt]/(r**2),
+                                            Br*data['mass'][filt]*data['x_e'][filt]/(r**2), 
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
 
         np.save('Ne_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical)
+        np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_RM)
         np.save('NH_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical)
 
 
