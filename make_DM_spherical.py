@@ -288,6 +288,7 @@ if __name__ == '__main__':
     phis_deg = phis * 180/np.pi
     for k, solar_gal_phi in enumerate(phis):
         solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
+        #print("i: %d; angle: %d; coords: %s" % (k, phis_deg[k], solar_circ_vec))
 
         # xyz centered on a point in Solar Circle
         #solar_circ_vec = np.array([8,0,0])
@@ -340,10 +341,10 @@ if __name__ == '__main__':
 
             # Create healpy image in spherical coords
             if plot_spherical_healpy:
-                plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k)
-                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+                plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
+                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
             if Bfields:
-                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
+                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
 
             # Create non-healpy image in spherical coords
             if plot_spherical:

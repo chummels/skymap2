@@ -38,7 +38,7 @@ def get_plot_presets(type_of_plot):
     d = dict(mi=mi, ma=ma, cmap=cmap, norm=norm, unit=unit, cbar_ticks=cbar_ticks)
     return d
 
-def plot_healpy(data, data_type, radius=None, rho=None, num=None):
+def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
     """
     Create healpy plot for dataset data
     """
@@ -59,10 +59,10 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None):
 
     llabel = rlabel = None
     if radius is not None: llabel='%s kpc' % radius
-    if rho is not None: rlabel=r'$]rho$ = %g' % rho
+    if rho is not None: rlabel=r'$\rho$ = %g' % rho
 
     projview(m, fig=fig, min=d['mi'], max=d['ma'], coord=["G"], flip="geo",
-            projection_type="mollweide", cmap=d['cmap'], rot=(180, 0, 0),
+            projection_type="mollweide", cmap=d['cmap'], rot=(180+angle, 0, 0),
             norm=d['norm'], unit=d['unit'], cbar_ticks=d['cbar_ticks'],
             title=None, llabel=llabel, rlabel=rlabel)
     plt.savefig('%s_%d_%d.png' % (data_type, radius, num))
