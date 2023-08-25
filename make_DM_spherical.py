@@ -8,6 +8,7 @@ from gizmopy.quicklook import *
 from weighted_2D_map import *
 import astropy.units as u
 from astropy.coordinates import cartesian_to_spherical
+from make_healpy import plot_healpy
 import sys
 import h5py
 
@@ -188,6 +189,7 @@ if __name__ == '__main__':
     plot_cartesian = False
     run_spherical = True
     plot_spherical = False
+    plot_spherical_healpy = True
     snum = 570
     xlen = 1000
     depth = 1000
@@ -282,7 +284,7 @@ if __name__ == '__main__':
     #solar_gal_phi = 0
 
     # step through phi vals to probe diff locations in the solar circle
-    phis = np.linspace(0,2*np.pi,10, endpoint=False)
+    phis = np.linspace(0,2*np.pi,5, endpoint=False)
     phis_deg = phis * 180/np.pi
     for k, solar_gal_phi in enumerate(phis):
         solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
@@ -323,14 +325,25 @@ if __name__ == '__main__':
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-            f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH*unit_NH_spherical)
-            f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne*unit_DM_spherical)
+            NH *= unit_NH_spherical
+            Ne *= unit_DM_spherical
+            f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH)
+            f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne)
 
             if Bfields:
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-                f.create_dataset('/RM/%d/%d' % (filter_r[x], k), data=RM*unit_RM)
+                RM *= unit_RM
+                f.create_dataset('/RM/%d/%d' % (filter_r[x], k), data=RM)
+            f.flush()
+
+            # Create healpy image in spherical coords
+            if plot_spherical_healpy:
+                plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k)
+                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+            if Bfields:
+                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
 
             # Create non-healpy image in spherical coords
             if plot_spherical:
