@@ -162,6 +162,8 @@ if __name__ == '__main__':
     fn = sys.argv[1]
     # fn = '/panfs/ds09/hopkins/sponnada/m12i/'
     # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
+
+    plot_cartesian = False
     snum = 600
     xlen = 200
     depth = 200
@@ -207,24 +209,26 @@ if __name__ == '__main__':
 
             np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
 
-
-    plt.figure()
-    plt.imshow(np.log10(Ne.T*unit_DM),
+    if plot_cartesian:
+        plt.figure()
+        plt.imshow(np.log10(Ne.T*unit_DM),
                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
                extent=[-10, 10, -10, 10], cmap='inferno')
-    plt.xlabel(r'x [kpc]')
-    plt.ylabel(r'y [kpc]')
-    plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
-    plt.savefig('Ne_{}_kpc_{}_depth.png'.format(xlen, depth))
+        plt.xlabel(r'x [kpc]')
+        plt.ylabel(r'y [kpc]')
+        plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
+        plt.savefig('Ne_{}_kpc_{}_depth.png'.format(xlen, depth))
 
-    plt.figure()
-    plt.imshow(np.log10(NH.T*unit_NH),
+        plt.figure()
+        plt.imshow(np.log10(NH.T*unit_NH),
                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
                extent=[-10, 10, -10, 10], cmap='inferno')
-    plt.xlabel(r'x [kpc]')
-    plt.ylabel(r'y [kpc]')
-    plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
-    plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
+        plt.xlabel(r'x [kpc]')
+        plt.ylabel(r'y [kpc]')
+        plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
+        plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
+
+
 
     solar_circ_vec = np.array([8,0,0])
 
