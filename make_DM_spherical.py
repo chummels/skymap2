@@ -9,6 +9,7 @@ from weighted_2D_map import *
 import astropy.units as u
 from astropy.coordinates import cartesian_to_spherical
 import sys
+import h5py
 
 def center_and_clip_mod(xyz,center_xyz,r_cut):
     '''
@@ -184,7 +185,6 @@ if __name__ == '__main__':
     # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
 
     plot_cartesian = False
-    pi = 3.141592
     snum = 600
     xlen = 1000
     depth = 1000
@@ -198,9 +198,14 @@ if __name__ == '__main__':
 
     data = loadData(fn, snum, spectrum = False, xlen = xlen, depth = depth, edgeon = False)
 
-    TF = None
+    if 'Bxyz' in data.keys():
+        Bfields = True
+    else:
+        Bfields = False
+
     # Temperature filter for hot DM
     # TF = np.where(data['T']>10**5.5)
+    TF = None
     if plot_cartesian:
 
         if TF is not None:
@@ -217,7 +222,7 @@ if __name__ == '__main__':
         np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
         np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
 
-        if 'Bxyz' in data.keys():
+        if Bfields:
             if TF is None:
                 RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF],
                                                 data['hsml'][TF], data['mass']*data['x_e']*data['Bxyz'][2],
@@ -249,33 +254,46 @@ if __name__ == '__main__':
         plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
         plt.clf()
 
-    # spherical projections
+    # Spherical projections from solar circle
+
+    # Store all data in HDF5 file for later processing if desired
+    f = h5py.File('proj.h5', 'w')
+    NHgrp = f.create_group("NH")
+    DMgrp = f.create_group("DM")
+    if Bfields:
+        RMgrp = f.create_group("RM")
+
+    # Radial Filters in kpc
+    filter_r = [10,200,800]
+
+    grps = f.keys()
+    for g in grps:
+        for r in filter_r:
+            f.create_group('/%s/%s' % (g, r))
+
     solar_gal_r = 8 # kpc
     solar_gal_theta = 0
     #solar_gal_phi = 0
 
     # step through phi vals to probe diff locations in the solar circle
-    phis = np.linspace(0,2*pi,10, endpoint=False)
-    #solar_gal_phi = 0
+    phis = np.linspace(0,2*np.pi,10, endpoint=False)
+    phis_deg = phis * 180/np.pi
     for k, solar_gal_phi in enumerate(phis):
-        #solar_circ_vec = np.array([8,0,0])
         solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
 
-        #xyz centered on a point in Solar Circle
+        # xyz centered on a point in Solar Circle
+        #solar_circ_vec = np.array([8,0,0])
         xs = data['xyz'][0] - solar_circ_vec[0]
         ys = data['xyz'][1] - solar_circ_vec[1]
         zs = data['xyz'][2] - solar_circ_vec[2]
 
         cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
-        # Calculate local density by taking mean density value within 100 pc
+        # Calculate local density by taking mean density value within 200 pc
 
         local = np.where(cartesian_radii < 0.2)
         local_rho = np.mean(data['rho'][local])
         print("Local density: %g" % local_rho)
-
-        # Radial Filters in kpc
-        filter_r = [10,200,800]
 
         # If temperature filter exists then use it
         if TF is not None:
@@ -289,7 +307,7 @@ if __name__ == '__main__':
             filt = radial_filters[x]
 
             r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
-            if 'Bxyz' in data.keys():
+            if Bfields:
                 B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
                 Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
 
@@ -299,14 +317,13 @@ if __name__ == '__main__':
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),Ne*unit_DM_spherical)
-            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),NH*unit_NH_spherical)
-            # If B fields present, then create RM map
-            if 'Bxyz' in data.keys():
+            f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH*unit_NH_spherical)
+            f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne*unit_DM_spherical)
+            if Bfields:
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-                np.save('RM_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),RM*unit_RM)
+                f.create_dataset('/RM/%d/%d' % (filter_r[x], k), data=RM*unit_RM)
 
             # Create non-healpy image in spherical coords
             plt.figure()
@@ -325,3 +342,4 @@ if __name__ == '__main__':
             plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
             plt.clf()
             plt.close('all')
+    f.close()
