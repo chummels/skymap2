@@ -180,36 +180,36 @@ if __name__ == '__main__':
     TF = None
     # Temperature filter for hot DM
     # TF = np.where(data['T']>10**5.5)
-
-    if TF is not None:
-        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
-                                            data['mass'][TF]*data['x_e'][TF], data['mass'][TF]*data['x_h'][TF],
-                                            data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
-                                            xlen=xlen, set_aspect_ratio=1.0, pixels=512)
-    else:
-        Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
-                                            data['mass']*data['x_e'],
-                                            data['mass']*data['x_h'],
-                                            xlen=xlen, set_aspect_ratio=1.0, pixels=512)
-
-    np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
-
-    np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
-
-    if 'Bxyz' in data.keys():
-        if TF is None:
-            RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF],
-                                               data['hsml'][TF], data['mass']*data['x_e']*data['Bxyz'][2],
-                                               xlen=xlen, set_aspect_ratio=1.0, pixels=512)
-            np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
-        else:
-            RM_TF, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
-                                             data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
-                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
-
-            np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
-
     if plot_cartesian:
+
+        if TF is not None:
+            Ne, NH, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+                                                data['mass'][TF]*data['x_e'][TF], data['mass'][TF]*data['x_h'][TF],
+                                                data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
+                                                xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+        else:
+            Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
+                                                data['mass']*data['x_e'],
+                                                data['mass']*data['x_h'],
+                                                xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+
+        np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
+    
+        np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
+
+        if 'Bxyz' in data.keys():
+            if TF is None:
+                RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF],
+                                                data['hsml'][TF], data['mass']*data['x_e']*data['Bxyz'][2],
+                                                xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+                np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
+            else:
+                RM_TF, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
+                                                data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
+                                                xlen=xlen, set_aspect_ratio=1.0, pixels=512)
+
+                np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
+
         plt.figure()
         plt.imshow(np.log10(Ne.T*unit_DM),
                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
@@ -228,8 +228,7 @@ if __name__ == '__main__':
         plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
         plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
 
-
-
+    # spherical projections
     solar_circ_vec = np.array([8,0,0])
 
     #xyz centered on a point in Solar Circle
