@@ -186,8 +186,8 @@ if __name__ == '__main__':
     plot_cartesian = False
     pi = 3.141592
     snum = 600
-    xlen = 200
-    depth = 200
+    xlen = 1000
+    depth = 1000
 
     unit_NH = 1.248e24
     unit_DM = unit_NH/3e18
@@ -255,7 +255,7 @@ if __name__ == '__main__':
     #solar_gal_phi = 0
 
     # step through phi vals to probe diff locations in the solar circle
-    phis = np.linspace(0,2*pi,10)
+    phis = np.linspace(0,2*pi,10, endpoint=False)
     #solar_gal_phi = 0
     for k, solar_gal_phi in enumerate(phis):
         #solar_circ_vec = np.array([8,0,0])
@@ -268,13 +268,22 @@ if __name__ == '__main__':
 
         cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
+        # Calculate local density by taking mean density value within 100 pc
+
+        local = np.where(cartesian_radii < 0.2)
+        local_rho = np.mean(data['rho'][local])
+        print("Local density: %g" % local_rho)
+
+        # Radial Filters in kpc
         filter_r = [10,200,800]
 
+        # If temperature filter exists then use it
         if TF is not None:
             radial_filters = [np.where((cartesian_radii < i) & (data['T'] > 10**5.5)) for i in filter_r]
         else:
             radial_filters = [np.where(cartesian_radii < i) for i in filter_r]
 
+        # Step through radial filters
         for x in range(len(radial_filters)):
 
             filt = radial_filters[x]
@@ -290,14 +299,16 @@ if __name__ == '__main__':
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),Ne*unit_DM_spherical)
+            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),NH*unit_NH_spherical)
+            # If B fields present, then create RM map
             if 'Bxyz' in data.keys():
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
                 np.save('RM_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),RM*unit_RM)
-            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),Ne*unit_DM_spherical)
-            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen, depth,filter_r[x],k), NH*unit_NH_spherical)
 
+            # Create non-healpy image in spherical coords
             plt.figure()
             plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
                     np.pi, -np.pi/2, np.pi/2],vmin=0,vmax=5, cmap='inferno')
