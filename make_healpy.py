@@ -63,7 +63,7 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
 
     llabel = rlabel = None
     if radius is not None: llabel='%s kpc' % radius
-    if rho is not None: rlabel=r'$\rho$ = %g' % rho
+    if rho is not None: rlabel=r'$\rho$ = %2.1g' % rho
 
     projview(m, fig=fig, min=d['mi'], max=d['ma'], coord=["G"], flip="geo",
             projection_type="mollweide", cmap=d['cmap'], rot=(180+angle, 0, 0),
@@ -94,7 +94,7 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None):
             ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
                     weight='heavy', color='k', transform=ax.transAxes)
         if rho is not None:
-            text2=r'$\rho$ = %g' % rho
+            text2=r'$\rho$ = %2.1g' % rho
             ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
                     weight='heavy', color='k', transform=ax.transAxes)
         plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))

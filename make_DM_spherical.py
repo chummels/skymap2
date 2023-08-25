@@ -310,7 +310,7 @@ if __name__ == '__main__':
 
         local = np.where(cartesian_radii < 0.2)
         local_rho = np.mean(data['rho'][local])
-        print("Local density: %g" % local_rho)
+        print("Local density: %2.1g" % local_rho)
 
         # If temperature filter exists then use it
         if TF is not None:
