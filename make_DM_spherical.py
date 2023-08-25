@@ -306,10 +306,12 @@ if __name__ == '__main__':
 
         cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
-        # Calculate local density by taking mean density value within 200 pc
+        # Calculate local density by taking total mass within 200 pc / volume
 
-        local = np.where(cartesian_radii < 0.2)
-        local_rho = np.mean(data['rho'][local])
+        local_rad = 0.2 # kpc
+        local = np.where(cartesian_radii < local_rad)
+        #local_rho = np.mean(data['rho'][local])
+        local_rho = np.sum(data['mass'][local]) / ((4./3.) * np.pi * local_rad**3)
         print("Local density: %2.1g" % local_rho)
 
         # If temperature filter exists then use it
