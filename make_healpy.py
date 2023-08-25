@@ -2,9 +2,11 @@
 Code for converting Sam's theta-phi numpy arrays to a healpy image
 """
 import healpy as hp
+from healpy.newvisufunc import projview, newprojplot
 import numpy as np
 import matplotlib as mpl
 from matplotlib import pyplot as plt
+import cmocean
 import sys
 import os
 
@@ -24,20 +26,27 @@ if name.startswith('NH'):
     ma = 1e22
     cbtext = 'log($N_{H}$ [$cm^{-2}$])'
     cmap = mpl.cm.viridis
-    cmap = mpl.cm.inferno
     norm = 'log'
+    unit='N$_H$ [cm$^{-2}$]'
 if name.startswith('Ne'):
     mi = 1e0
     ma = 1e3
     cbtext = 'log(DM [$pc \cdot cm^{-3}$])'
     cmap = mpl.cm.inferno
     norm = 'log'
+    unit='DM [pc cm$^{-3}$]'
 if name.startswith('RM'):
-    mi = -1e2
-    ma = 1e2
-    cbtext = 'log(RM [$rad \cdot m^{-2}$])'
-    cmap = mpl.cm.bwr
-    norm = None
+    mi = -1e3
+    ma = 1e3
+    #cbtext = 'log(RM [$rad \cdot m^{-2}$])'
+    cmap = cmocean.cm.balance_r
+    norm = 'symlog'
+    unit='RM [rad m$^{-2}$]'
+
+title=None
+rlabel=None 
+llabel=None
+fontname="serif"
 
 # Automatically get the array size from the loaded numpy array
 struct = np.load(fn)
@@ -70,7 +79,8 @@ m.clip(mi, ma, out=m)
 #hp.mollview(m, fig=fig, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
 #hp.mollview(m, fig=fig, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
 # x=8
-hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
+#hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
+projview(m, fig=fig, min=mi, max=ma, coord=["G"], flip="geo", projection_type="mollweide", cmap=cmap, rot=(180, 0, 0), norm=norm, title=title, rlabel=rlabel, llabel=llabel, unit=unit)
 # x=-8
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
 # y=8
@@ -79,21 +89,21 @@ hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), f
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
 
 # Make colorbar better
-if norm == 'log':
-    cb = fig.get_axes()[1]
-    #ticks = np.logspace(np.log10(m.min()), np.log10(m.max()), 4, endpoint=True)
-    ticks = np.logspace(np.log10(mi), np.log10(ma), 4, endpoint=True)
-    cb.set_xticks(ticks)
-    logticks = ['%2.1f' % tick for tick in np.log10(ticks)]
-    cb.set_xticklabels(logticks)
-    cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
+#if norm == 'log':
+#    cb = fig.get_axes()[1]
+#    #ticks = np.logspace(np.log10(m.min()), np.log10(m.max()), 4, endpoint=True)
+#    ticks = np.logspace(np.log10(mi), np.log10(ma), 4, endpoint=True)
+#    cb.set_xticks(ticks)
+#    logticks = ['%2.1f' % tick for tick in np.log10(ticks)]
+#    cb.set_xticklabels(logticks)
+#    cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
 
 # Add text
 fig = plt.gcf()
-text = '10 kpc'
-fig.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
-text2 = 'x=8'
-fig.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
+#text = '10 kpc'
+#fig.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
+#text2 = 'x=8'
+#fig.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
 plt.savefig('%s_healpy.png' % name)
 
 plt.clf()
@@ -107,6 +117,6 @@ ax.set_yscale('log')
 ax.set_ylabel('PDF')
 ax.set_ylim(1e-6,1e-1)
 ax.set_xlabel('log(DM (pc cm$^{-3}$))')
-ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
-ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+#ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+#ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
 plt.savefig('%s_pdf.png' % name)
