@@ -23,11 +23,12 @@ name = os.path.splitext(os.path.basename(fn))[0]
 if name.startswith('NH'):
     mi = 1e13
     #ma = np.inf
-    ma = 1e22
+    ma = 1e21
     cbtext = 'log($N_{H}$ [$cm^{-2}$])'
     cmap = mpl.cm.viridis
     norm = 'log'
     unit='N$_H$ [cm$^{-2}$]'
+    cbar_ticks=[1e13, 1e15, 1e17, 1e19, 1e21]
 if name.startswith('Ne'):
     mi = 1e0
     ma = 1e3
@@ -35,6 +36,7 @@ if name.startswith('Ne'):
     cmap = mpl.cm.inferno
     norm = 'log'
     unit='DM [pc cm$^{-3}$]'
+    cbar_ticks=[1, 10, 100, 1000]
 if name.startswith('RM'):
     mi = -1e3
     ma = 1e3
@@ -42,6 +44,7 @@ if name.startswith('RM'):
     cmap = cmocean.cm.balance_r
     norm = 'symlog'
     unit='RM [rad m$^{-2}$]'
+    cbar_ticks=[-1000, -100, -10, 0, 10, 100, 1000]
 
 title=None
 rlabel=None 
@@ -80,8 +83,7 @@ m.clip(mi, ma, out=m)
 #hp.mollview(m, fig=fig, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
 # x=8
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(180, 0, 0), flip='geo', cmap=cmap)
-projview(m, fig=fig, min=mi, max=ma, coord=["G"], flip="geo", projection_type="mollweide", cmap=cmap, rot=(180, 0, 0), norm=norm, title=title, rlabel=rlabel, llabel=llabel, unit=unit)
-# x=-8
+projview(m, fig=fig, min=mi, max=ma, coord=["G"], flip="geo", projection_type="mollweide", cmap=cmap, rot=(180, 0, 0), norm=norm, title=title, rlabel=rlabel, llabel=llabel, unit=unit, cbar_ticks=cbar_ticks)
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
 # y=8
 #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
