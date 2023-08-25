@@ -155,6 +155,26 @@ def B_spherical(data,filt):
         B_spherical.append( np.dot(spherical_transform_matrix,data['Bxyz'].T[filt][i]))
     return(np.array(B_spherical).T)
 
+def cart2sph(x, y, z):
+    """
+    Convert from cartesian coords to spherical coords
+    """
+    hxy = np.hypot(x, y)
+    r = np.hypot(hxy, z)
+    el = np.arctan2(z, hxy)
+    az = np.arctan2(y, x)
+    return az, el, r
+
+def sph2cart(az, el, r):
+    """
+    Convert from spherical coords to cartesian coords
+    """
+    rcos_theta = r * np.cos(el)
+    x = rcos_theta * np.cos(az)
+    y = rcos_theta * np.sin(az)
+    z = r * np.sin(el)
+    return np.array([x, y, z])
+
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
@@ -194,7 +214,6 @@ if __name__ == '__main__':
                                                 xlen=xlen, set_aspect_ratio=1.0, pixels=512)
 
         np.save('Ne_{}_kpc_{}_depth.npy'.format(xlen, depth), Ne*unit_DM)
-    
         np.save('NH_{}_kpc_{}_depth.npy'.format(xlen, depth), NH*unit_NH)
 
         if 'Bxyz' in data.keys():
@@ -229,59 +248,65 @@ if __name__ == '__main__':
         plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
 
     # spherical projections
-    solar_circ_vec = np.array([8,0,0])
+    solar_gal_r = 8 # kpc
+    solar_gal_theta = 0
+    #solar_gal_phi = 0
 
-    #xyz centered on a point in Solar Circle
-    xs = data['xyz'][0] - solar_circ_vec[0]
-    ys = data['xyz'][1] - solar_circ_vec[1]
-    zs = data['xyz'][2] - solar_circ_vec[2]
+    # step through phi vals to probe diff locations in the solar circle
+    phis = np.linspace(0,2*pi,10)
+    #solar_gal_phi = 0
+    for k, solar_gal_phi in enumerate(phis):
+        #solar_circ_vec = np.array([8,0,0])
+        solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
 
-    cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
+        #xyz centered on a point in Solar Circle
+        xs = data['xyz'][0] - solar_circ_vec[0]
+        ys = data['xyz'][1] - solar_circ_vec[1]
+        zs = data['xyz'][2] - solar_circ_vec[2]
 
-    filter_r = [10,200]
+        cartesian_radii = np.sqrt(xs**2+ys**2+zs**2)
 
-    if TF is not None:
-        radial_filters = [np.where((cartesian_radii < i) & (data['T'] > 10**5.5)) for i in filter_r]
-    else:
-        radial_filters = [np.where(cartesian_radii < i) for i in filter_r]
+        filter_r = [10,200,1000]
 
-    for x in range(len(radial_filters)):
+        if TF is not None:
+            radial_filters = [np.where((cartesian_radii < i) & (data['T'] > 10**5.5)) for i in filter_r]
+        else:
+            radial_filters = [np.where(cartesian_radii < i) for i in filter_r]
 
-        filt = radial_filters[x]
+        for x in range(len(radial_filters)):
 
-        r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
-        if 'Bxyz' in data.keys():
-            B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
-            Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
+            filt = radial_filters[x]
 
+            r, lat, lon = cartesian_to_spherical(xs[filt], ys[filt], zs[filt])
+            if 'Bxyz' in data.keys():
+                B_sph = B_spherical(data,filt)*1e6 #convert into uG for right RM units
+                Br,Bphi,Btheta = B_sph[0],B_sph[1],B_sph[2]
 
-        lon -= np.pi*u.rad
+            lon -= np.pi*u.rad
 
-        Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                            data['mass'][filt]*data['x_e'][filt]/(r**2),
-                                            data['mass'][filt]*data['x_h'][filt]/(r**2),
+            Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                                data['mass'][filt]*data['x_e'][filt]/(r**2),
+                                                data['mass'][filt]*data['x_h'][filt]/(r**2),
+                                                xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+            if 'Bxyz' in data.keys():
+                RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                            Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-        if 'Bxyz' in data.keys():
-           RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                        Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
-                                        xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-           np.save('RM_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM)
+            np.save('RM_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM,k)
+            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical,k)
+            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical,k)
 
-        np.save('Ne_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical)
-        np.save('NH_{}_kpc_{}_depth_spherical_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical)
-
-
-        plt.figure()
-        plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
-                   np.pi, -np.pi/2, np.pi/2],vmin=0,vmax=5, cmap='inferno')
-        plt.ylabel(r'latitude [rad]')
-        plt.xlabel(r'longitude [rad]')
-        plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
-        plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}.png'.format(xlen,depth,filter_r[x]))
-        plt.figure()
-        plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
-                   np.pi, -np.pi/2, np.pi/2], cmap='inferno')
-        plt.ylabel(r'latitude [rad]')
-        plt.xlabel(r'longitude [rad]')
-        plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
-        plt.savefig('NH_{}_kpc_{}_depth_spherical_{}.png'.format(xlen, depth,filter_r[x]))
+            plt.figure()
+            plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
+                    np.pi, -np.pi/2, np.pi/2],vmin=0,vmax=5, cmap='inferno')
+            plt.ylabel(r'latitude [rad]')
+            plt.xlabel(r'longitude [rad]')
+            plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
+            plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x]),k)
+            plt.figure()
+            plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
+                    np.pi, -np.pi/2, np.pi/2], cmap='inferno')
+            plt.ylabel(r'latitude [rad]')
+            plt.xlabel(r'longitude [rad]')
+            plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
+            plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x]),k)
