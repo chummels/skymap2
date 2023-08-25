@@ -11,6 +11,10 @@ import sys
 import os
 
 def get_plot_presets(type_of_plot):
+    """
+    By specifying whether this is a DM, RM, or NH map, it sets some presets for
+    the Healpy projections
+    """
     if type_of_plot == 'NH':
         mi = 1e13
         ma = 1e21
@@ -74,58 +78,8 @@ if __name__ == '__main__':
         sys.exit('Usage: python %s <numpy_filename>' % sys.argv[0])
 
     fn = sys.argv[1]
-    name = os.path.splitext(os.path.basename(fn))[0]
 
-    title=None
-    rlabel=None
-    llabel=None
-    fontname="serif"
-
-    # Automatically get the array size from the loaded numpy array
-    struct = np.load(fn)
-    print('Min = %g' % np.min(struct))
-    print('Max = %g' % np.max(struct))
-    print('Mean = %g' % np.mean(struct))
-    print('Median = %g' % np.median(struct))
-    n_theta = struct.shape[0]
-    n_phi = struct.shape[1]
-    theta = np.linspace(0, np.pi, n_theta)
-    phi = np.linspace(0, 2*np.pi, n_phi)
-    ttheta, pphi = np.meshgrid(theta, phi, indexing = 'ij')
-    fig = plt.figure()
-
-    # HealPy transformation
-    nside = 100
-    pixel_indices = hp.ang2pix(nside, ttheta, pphi)
-    m = np.ones(hp.nside2npix(nside))
-    m[pixel_indices] = struct
-    m.clip(mi, ma, out=m)
-
-    projview(m, fig=fig, min=mi, max=ma, coord=["G"], flip="geo", projection_type="mollweide", cmap=cmap, rot=(180, 0, 0), norm=norm, title=title, rlabel=rlabel, llabel=llabel, unit=unit, cbar_ticks=cbar_ticks)
-    #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(0, 0, 0), flip='geo', cmap=cmap)
-    # y=8
-    #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(270, 0, 0), flip='geo', cmap=cmap)
-    # y=-8
-    #hp.mollview(m, fig=fig, min=mi, max=ma, norm=norm, title='',  rot=(90, 0, 0), flip='geo', cmap=cmap)
-
-    # Make colorbar better
-    #if norm == 'log':
-    #    cb = fig.get_axes()[1]
-    #    #ticks = np.logspace(np.log10(m.min()), np.log10(m.max()), 4, endpoint=True)
-    #    ticks = np.logspace(np.log10(mi), np.log10(ma), 4, endpoint=True)
-    #    cb.set_xticks(ticks)
-    #    logticks = ['%2.1f' % tick for tick in np.log10(ticks)]
-    #    cb.set_xticklabels(logticks)
-    #    cb.text( 0.5, -4.0, cbtext, transform=cb.transAxes, ha="center", va="bottom")
-
-    # Add text
-    fig = plt.gcf()
-    #text = '10 kpc'
-    #fig.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
-    #text2 = 'x=8'
-    #fig.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=fig.transFigure)
-    plt.savefig('%s_healpy.png' % name)
-
+    # Stuff for PDF
     plt.clf()
     ax = plt.gca()
     log_struct = np.log10(struct)
@@ -137,6 +91,6 @@ if __name__ == '__main__':
     ax.set_ylabel('PDF')
     ax.set_ylim(1e-6,1e-1)
     ax.set_xlabel('log(DM (pc cm$^{-3}$))')
-    #ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
-    #ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+    ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
+    ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
     plt.savefig('%s_pdf.png' % name)

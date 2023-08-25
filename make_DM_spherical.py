@@ -2,10 +2,14 @@ import matplotlib
 matplotlib.use('agg')
 import numpy as np
 import matplotlib.pyplot as plt
-from gizmopy.load_from_snapshot import *
-from gizmopy.load_fire_snap import *
-from gizmopy.quicklook import *
-from weighted_2D_map import *
+from gizmopy.load_from_snapshot import \
+    load_from_snapshot
+from gizmopy.load_fire_snap import \
+    load_fire_snap
+from gizmopy.quicklook import \
+    estimate_zoom_center
+from weighted_2D_map import \
+    construct_weighted2dmap
 import astropy.units as u
 from astropy.coordinates import cartesian_to_spherical
 from make_healpy import plot_healpy
