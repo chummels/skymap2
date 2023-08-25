@@ -2,6 +2,9 @@ import matplotlib
 matplotlib.use('agg')
 import numpy as np
 import matplotlib.pyplot as plt
+import astropy.units as u
+import sys
+import h5py
 from gizmopy.load_from_snapshot import \
     load_from_snapshot
 from gizmopy.load_fire_snap import \
@@ -10,11 +13,11 @@ from gizmopy.quicklook import \
     estimate_zoom_center
 from weighted_2D_map import \
     construct_weighted2dmap
-import astropy.units as u
-from astropy.coordinates import cartesian_to_spherical
-from make_healpy import plot_healpy
-import sys
-import h5py
+from astropy.coordinates import \
+    cartesian_to_spherical
+from make_healpy import \
+    plot_healpy, \
+    plot_PDF
 
 def center_and_clip_mod(xyz,center_xyz,r_cut):
     '''
@@ -194,7 +197,8 @@ if __name__ == '__main__':
     run_spherical = True
     plot_spherical = False
     plot_spherical_healpy = True
-    snum = 570
+    plot_spherical_PDF = True
+    snum = 600
     xlen = 1000
     depth = 1000
 
@@ -345,10 +349,18 @@ if __name__ == '__main__':
 
             # Create healpy image in spherical coords
             if plot_spherical_healpy:
-                plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
+                #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
                 plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
             if Bfields:
                 plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
+
+
+            # Create Prob Dist Func plots
+            if plot_spherical_PDF:
+                #plot_PDF(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k)
+                plot_PDF(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+            if Bfields:
+                plot_PDF(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
 
             # Create non-healpy image in spherical coords
             if plot_spherical:

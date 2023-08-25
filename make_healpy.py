@@ -72,25 +72,30 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
     plt.savefig('%s_%d_%d.png' % (data_type, radius, num))
     plt.close('all')
 
-if __name__ == '__main__':
-
-    if len(sys.argv) != 2:
-        sys.exit('Usage: python %s <numpy_filename>' % sys.argv[0])
-
-    fn = sys.argv[1]
-
-    # Stuff for PDF
-    plt.clf()
+def plot_PDF(data, data_type, radius=None, rho=None, num=None):
+    """
+    Create probability distribution function plots
+    """
+    d = get_plot_presets(data_type)
+    fig = plt.Figure()
     ax = plt.gca()
-    log_struct = np.log10(struct)
-    bins = np.linspace(0,3,30)
-    counts, bins = np.histogram(log_struct, bins=bins)
-    norm = counts / struct.size # PDF
-    ax.stairs(norm, bins, color='k', fill=True)
-    ax.set_yscale('log')
-    ax.set_ylabel('PDF')
-    ax.set_ylim(1e-6,1e-1)
-    ax.set_xlabel('log(DM (pc cm$^{-3}$))')
-    ax.text(0.05, 0.94, text, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
-    ax.text(0.05, 0.88, text2, horizontalalignment='left', size=14, weight='heavy', color='k', transform=ax.transAxes)
-    plt.savefig('%s_pdf.png' % name)
+    if data_type == 'DM':
+        log_data = np.log10(data)
+        bins = np.linspace(np.log10(d['mi']),np.log10(d['ma']),30)
+        counts, bins = np.histogram(log_data, bins=bins)
+        norm = counts / data.size # PDF
+        ax.stairs(norm, bins, color='k', fill=True)
+        ax.set_yscale('log')
+        ax.set_ylabel('PDF')
+        ax.set_ylim(1e-6,1e-0)
+        ax.set_xlabel('log(DM (pc cm$^{-3}$))')
+        if radius is not None:
+            text='%s kpc' % radius
+            ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
+                    weight='heavy', color='k', transform=ax.transAxes)
+        if rho is not None:
+            text2=r'$\rho$ = %g' % rho
+            ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
+                    weight='heavy', color='k', transform=ax.transAxes)
+        plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+    plt.close('all')
