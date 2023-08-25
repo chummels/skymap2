@@ -184,6 +184,7 @@ if __name__ == '__main__':
     # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
 
     plot_cartesian = False
+    pi = 3.141592
     snum = 600
     xlen = 200
     depth = 200
