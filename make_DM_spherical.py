@@ -155,8 +155,6 @@ def B_spherical(data,filt):
         B_spherical.append( np.dot(spherical_transform_matrix,data['Bxyz'].T[filt][i]))
     return(np.array(B_spherical).T)
 
-   
-
 if __name__ == '__main__':
 
     if len(sys.argv) != 2:
@@ -171,7 +169,7 @@ if __name__ == '__main__':
     unit_NH = 1.248e24
     unit_DM = unit_NH/3e18
 
-    unit_DM_spherical = unit_DM 
+    unit_DM_spherical = unit_DM
     unit_NH_spherical  = unit_NH
     unit_RM = 3.2855e5 # rad/m^2 conversion, the unit is .808 * 1000 * 404.621
 
@@ -188,7 +186,7 @@ if __name__ == '__main__':
                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
     else:
         Ne, NH, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][2], data['hsml'],
-                                            data['mass']*data['x_e'], 
+                                            data['mass']*data['x_e'],
                                             data['mass']*data['x_h'],
                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
 
@@ -200,10 +198,10 @@ if __name__ == '__main__':
         if TF is None:
             RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
                                             data['mass']*data['x_e']*data['Bxyz'][2], xlen=xlen, set_aspect_ratio=1.0, pixels=512)
-            np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)                                            
-        else:  
+            np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
+        else:
             RM_TF, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
-                                             data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF], 
+                                             data['mass'][TF]*data['x_e'][TF]*data['Bxyz'][2][TF],
                                             xlen=xlen, set_aspect_ratio=1.0, pixels=512)
 
             np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
@@ -256,8 +254,8 @@ if __name__ == '__main__':
         lon -= np.pi*u.rad
 
         Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                            data['mass'][filt]*data['x_e'][filt]/(r**2), 
-                                            data['mass'][filt]*data['x_h'][filt]/(r**2), 
+                                            data['mass'][filt]*data['x_e'][filt]/(r**2),
+                                            data['mass'][filt]*data['x_h'][filt]/(r**2) 
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
         if 'Bxyz' in data.keys():
            RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r, Br*data['mass'][filt]*data['x_e'][filt]/(r**2), xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
