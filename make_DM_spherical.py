@@ -189,8 +189,6 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         sys.exit('Usage: %s dataset' % sys.argv[0])
     fn = sys.argv[1]
-    # fn = '/panfs/ds09/hopkins/sponnada/m12i/'
-    # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
 
     run_cartesian = False
     plot_cartesian = False
