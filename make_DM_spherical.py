@@ -293,9 +293,9 @@ if __name__ == '__main__':
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-            np.save('RM_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x]),RM*unit_RM,k)
-            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x]),Ne*unit_DM_spherical,k)
-            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen, depth,filter_r[x]), NH*unit_NH_spherical,k)
+            np.save('RM_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),RM*unit_RM)
+            np.save('Ne_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen,depth,filter_r[x],k),Ne*unit_DM_spherical)
+            np.save('NH_{}_kpc_{}_depth_spherical_{}_{}.npy'.format(xlen, depth,filter_r[x],k), NH*unit_NH_spherical)
 
             plt.figure()
             plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
@@ -303,11 +303,11 @@ if __name__ == '__main__':
             plt.ylabel(r'latitude [rad]')
             plt.xlabel(r'longitude [rad]')
             plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
-            plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x]),k)
+            plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x],k))
             plt.figure()
             plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
                     np.pi, -np.pi/2, np.pi/2], cmap='inferno')
             plt.ylabel(r'latitude [rad]')
             plt.xlabel(r'longitude [rad]')
             plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
-            plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x]),k)
+            plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
