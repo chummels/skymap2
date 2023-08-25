@@ -184,8 +184,11 @@ if __name__ == '__main__':
     # fn = '/panfs/ds09/hopkins/sponnada/m12i/'
     # fn = '/panfs/ds09/hopkins/sponnada/m12f/mhdcv/snapdir_600'
 
+    run_cartesian = False
     plot_cartesian = False
-    snum = 600
+    run_spherical = True
+    plot_spherical = False
+    snum = 570
     xlen = 1000
     depth = 1000
 
@@ -206,7 +209,7 @@ if __name__ == '__main__':
     # Temperature filter for hot DM
     # TF = np.where(data['T']>10**5.5)
     TF = None
-    if plot_cartesian:
+    if run_cartesian:
 
         if TF is not None:
             Ne, NH, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF], data['hsml'][TF],
@@ -235,26 +238,29 @@ if __name__ == '__main__':
 
                 np.save('RM_TF_{}_kpc_{}_depth.npy'.format(xlen, depth), RM_TF*unit_RM)
 
-        plt.figure()
-        plt.imshow(np.log10(Ne.T*unit_DM),
-               #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
-               extent=[-10, 10, -10, 10], cmap='inferno')
-        plt.xlabel(r'x [kpc]')
-        plt.ylabel(r'y [kpc]')
-        plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
-        plt.savefig('Ne_{}_kpc_{}_depth.png'.format(xlen, depth))
-        plt.clf()
+        if plot_cartesian:
+            plt.figure()
+            plt.imshow(np.log10(Ne.T*unit_DM),
+                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+                extent=[-10, 10, -10, 10], cmap='inferno')
+            plt.xlabel(r'x [kpc]')
+            plt.ylabel(r'y [kpc]')
+            plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
+            plt.savefig('Ne_{}_kpc_{}_depth.png'.format(xlen, depth))
+            plt.clf()
 
-        plt.imshow(np.log10(NH.T*unit_NH),
-               #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
-               extent=[-10, 10, -10, 10], cmap='inferno')
-        plt.xlabel(r'x [kpc]')
-        plt.ylabel(r'y [kpc]')
-        plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
-        plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
-        plt.clf()
+            plt.imshow(np.log10(NH.T*unit_NH),
+                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+                extent=[-10, 10, -10, 10], cmap='inferno')
+            plt.xlabel(r'x [kpc]')
+            plt.ylabel(r'y [kpc]')
+            plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
+            plt.savefig('NH_{}_kpc_{}_depth.png'.format(xlen, depth))
+            plt.clf()
+            plt.close('all')
 
     # Spherical projections from solar circle
+    if not run_spherical: sys.exit()
 
     # Store all data in HDF5 file for later processing if desired
     f = h5py.File('proj.h5', 'w')
@@ -319,6 +325,7 @@ if __name__ == '__main__':
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
             f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH*unit_NH_spherical)
             f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne*unit_DM_spherical)
+
             if Bfields:
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
@@ -326,20 +333,21 @@ if __name__ == '__main__':
                 f.create_dataset('/RM/%d/%d' % (filter_r[x], k), data=RM*unit_RM)
 
             # Create non-healpy image in spherical coords
-            plt.figure()
-            plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
-                    np.pi, -np.pi/2, np.pi/2],vmin=0,vmax=5, cmap='inferno')
-            plt.ylabel(r'latitude [rad]')
-            plt.xlabel(r'longitude [rad]')
-            plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
-            plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x],k))
-            plt.clf()
-            plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
-                    np.pi, -np.pi/2, np.pi/2], cmap='inferno')
-            plt.ylabel(r'latitude [rad]')
-            plt.xlabel(r'longitude [rad]')
-            plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
-            plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
-            plt.clf()
-            plt.close('all')
+            if plot_spherical:
+                plt.figure()
+                plt.imshow(np.log10(Ne*unit_DM_spherical), extent=[-np.pi,
+                        np.pi, -np.pi/2, np.pi/2],vmin=0,vmax=5, cmap='inferno')
+                plt.ylabel(r'latitude [rad]')
+                plt.xlabel(r'longitude [rad]')
+                plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
+                plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x],k))
+                plt.clf()
+                plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
+                        np.pi, -np.pi/2, np.pi/2], cmap='inferno')
+                plt.ylabel(r'latitude [rad]')
+                plt.xlabel(r'longitude [rad]')
+                plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
+                plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
+                plt.clf()
+                plt.close('all')
     f.close()
