@@ -351,18 +351,22 @@ if __name__ == '__main__':
 
             # Create healpy image in spherical coords
             if plot_spherical_healpy:
-                #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
-                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
+                #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k,
+                #    angle=phis_deg[k])
+                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k,
+                    angle=phis_deg[k], multiplot=True)
             if Bfields:
-                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k, angle=phis_deg[k])
-
+                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k,
+                    angle=phis_deg[k])
 
             # Create Prob Dist Func plots
             if plot_spherical_PDF:
                 #plot_PDF(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k)
-                plot_PDF(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+                #plot_PDF(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+                pass
             if Bfields:
-                plot_PDF(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
+                #plot_PDF(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
+                pass
 
             # Create non-healpy image in spherical coords
             if plot_spherical:

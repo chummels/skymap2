@@ -42,7 +42,7 @@ def get_plot_presets(type_of_plot):
     d = dict(mi=mi, ma=ma, cmap=cmap, norm=norm, unit=unit, cbar_ticks=cbar_ticks)
     return d
 
-def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
+def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0, multiplot=False):
     """
     Create healpy plot for dataset data
     """
@@ -52,7 +52,10 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
     theta = np.linspace(0, np.pi, n_theta)
     phi = np.linspace(0, 2*np.pi, n_phi)
     ttheta, pphi = np.meshgrid(theta, phi, indexing = 'ij')
-    fig = plt.figure()
+    if multiplot:
+        fig = plt.figure(figsize=(6.4, 9))
+    else:
+        fig = plt.figure()
 
     # HealPy transformation
     nside = 100
@@ -61,23 +64,30 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0):
     m[pixel_indices] = data
     m.clip(d['mi'], d['ma'], out=m)
 
-    llabel = rlabel = None
+    llabel = rlabel = sub = None
     if radius is not None: llabel='%s kpc' % radius
     if rho is not None: rlabel=r'$\rho$ = %2.1g' % rho
+    if multiplot: sub=211
 
     projview(m, fig=fig, min=d['mi'], max=d['ma'], coord=["G"], flip="geo",
             projection_type="mollweide", cmap=d['cmap'], rot=(180+angle, 0, 0),
             norm=d['norm'], unit=d['unit'], cbar_ticks=d['cbar_ticks'],
-            title=None, llabel=llabel, rlabel=rlabel)
+            title=None, llabel=llabel, rlabel=rlabel, sub=sub)
+    if multiplot:
+        plot_PDF(data, data_type, radius=radius, rho=rho, num=num, multiplot=True)
+        plt.tight_layout()
     plt.savefig('%s_%d_%d.png' % (data_type, radius, num))
     plt.close('all')
 
-def plot_PDF(data, data_type, radius=None, rho=None, num=None):
+def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
     """
     Create probability distribution function plots
     """
     d = get_plot_presets(data_type)
-    fig = plt.Figure()
+    if multiplot:
+        plt.subplot(212)
+    else:
+        fig = plt.Figure()
     ax = plt.gca()
     if data_type == 'DM':
         log_data = np.log10(data)
@@ -89,13 +99,15 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None):
         ax.set_ylabel('PDF')
         ax.set_ylim(1e-6,1e-0)
         ax.set_xlabel('log(DM (pc cm$^{-3}$))')
-        if radius is not None:
-            text='%s kpc' % radius
-            ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
-                    weight='heavy', color='k', transform=ax.transAxes)
-        if rho is not None:
-            text2=r'$\rho$ = %2.1g' % rho
-            ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
-                    weight='heavy', color='k', transform=ax.transAxes)
-        plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
-    plt.close('all')
+        if not multiplot:
+            if radius is not None:
+                text='%s kpc' % radius
+                ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+            if rho is not None:
+                text2=r'$\rho$ = %2.1g' % rho
+                ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+        if not multiplot:
+            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+    return
