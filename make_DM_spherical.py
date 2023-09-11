@@ -96,6 +96,12 @@ def get_vals(xyz, ok, proj_matrix, sdir, snum, spectrum = False):
     x_e  = load_fire_snap('ElectronAbundance',0,sdir,snum).take(ok,axis=0); data_dict['x_e'] = x_e;
     x_h  = load_fire_snap('NeutralHydrogenAbundance',0,sdir,snum).take(ok,axis=0); data_dict['x_h'] = x_h;
     vxyz = np.dot( proj_matrix , (load_fire_snap('Velocities',0,sdir,snum).take(ok,axis=0)).transpose() ); data_dict['vxyz'] = vxyz;
+    # O/H = O / (mass - (metals + helium)
+    metals =  load_fire_snap('Metallicity',0,sdir,snum).take(ok,axis=0);
+    O = metals[:,4]
+    He = metals[:,1]
+    Metals = metals[:,0]
+    O_H = O / (1. - (He + Metals)); data_dict['O_H'] = O_H;
     vol = load_fire_snap('Volume',0,sdir,snum).take(ok,axis=0); data_dict['vol'] = vol
     if 'CosmicRayEnergy' in load_fire_snap('Keys',0,sdir,snum):
         Ecr = load_fire_snap('CosmicRayEnergy',0,sdir,snum).take(ok,axis=0)
@@ -215,8 +221,8 @@ if __name__ == '__main__':
         Bfields = False
 
     # Temperature filter for hot DM
-    # TF = np.where(data['T']>10**5.5)
-    TF = None
+    TF = np.where(data['T']>10**5.5)
+    #TF = None
     if run_cartesian:
 
         if TF is not None:
@@ -333,7 +339,15 @@ if __name__ == '__main__':
             Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
+                                                data['O_H'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+            OH, mas, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                                data['mass'][filt]*data['O_H'][filt]/(r**2),
+                                                data['mass'][filt]/(r**2),
+                                                xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+            # Make OH the mass-weighted O/H ratio
+            import pdb; pdb.set_trace()
+            OH /= mas
             NH *= unit_NH_spherical
             Ne *= unit_DM_spherical
             f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH)
@@ -352,6 +366,8 @@ if __name__ == '__main__':
                 #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k,
                 #    angle=phis_deg[k])
                 plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k,
+                    angle=phis_deg[k], multiplot=True)
+                plot_healpy(Ne, 'OH', radius=filter_r[x], rho=local_rho, num=k,
                     angle=phis_deg[k], multiplot=True)
             if Bfields:
                 plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k,

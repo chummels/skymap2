@@ -36,6 +36,13 @@ def get_plot_presets(type_of_plot):
         norm = 'symlog'
         unit='RM [rad m$^{-2}$]'
         cbar_ticks=[-1000, -100, -10, 0, 10, 100, 1000]
+    elif type_of_plot == 'OH':
+        mi = 0.1
+        ma = 10
+        cmap = mpl.cm.viridis
+        norm = 'log'
+        unit='O?H'
+        cbar_ticks=[0.1, 1, 10]
     else:
         sys.exit('%s is not a recognized type of plot' % type_of_plot)
 
@@ -76,7 +83,7 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0, multi
     if multiplot:
         plot_PDF(data, data_type, radius=radius, rho=rho, num=num, multiplot=True)
         plt.tight_layout()
-    plt.savefig('%s_%d_%d.png' % (data_type, radius, num))
+    plt.savefig('%s_%d_%02d.png' % (data_type, radius, num))
     plt.close('all')
 
 def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
