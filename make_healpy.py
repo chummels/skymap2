@@ -37,12 +37,19 @@ def get_plot_presets(type_of_plot):
         unit='RM [rad m$^{-2}$]'
         cbar_ticks=[-1000, -100, -10, 0, 10, 100, 1000]
     elif type_of_plot == 'OH':
-        mi = 0.1
+        mi = 0.05
         ma = 10
         cmap = mpl.cm.viridis
         norm = 'log'
-        unit='O?H'
-        cbar_ticks=[0.1, 1, 10]
+        unit=r'$\frac{[O/H]}{[O/H]_{\odot}}$'
+        cbar_ticks=[0.05,0.1,0.2,0.3,0.4,0.5,0.5,1,5,10]
+    elif type_of_plot == 'Z':
+        mi = 0.05
+        ma = 10
+        cmap = mpl.cm.viridis
+        norm = 'log'
+        unit=r'$\frac{[Z]}{[Z]_{\odot}}$'
+        cbar_ticks=[0.05,0.1,0.2,0.3,0.4,0.5,0.5,1,5,10]    
     else:
         sys.exit('%s is not a recognized type of plot' % type_of_plot)
 
@@ -96,6 +103,52 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
     else:
         fig = plt.Figure()
     ax = plt.gca()
+
+    if data_type == 'Z':
+        log_data = np.log10(data)
+        bins = np.linspace(np.log10(d['mi']),np.log10(d['ma']),30)
+        counts, bins = np.histogram(log_data, bins=bins)
+        norm = counts / data.size # PDF
+        ax.stairs(norm, bins, color='k', fill=True)
+        ax.set_yscale('log')
+        ax.set_ylabel('PDF')
+        ax.set_ylim(1e-6,1e-0)
+        ax.set_xlabel(r'log$_{\rm 10}$ $\frac{[Z]}{[Z]_{\odot}}$')
+        if not multiplot:
+            if radius is not None:
+                text='%s kpc' % radius
+                ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+            if rho is not None:
+                text2=r'$\rho$ = %2.1g' % rho
+                ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+        if not multiplot:
+            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+
+
+    if data_type == 'OH':
+        log_data = np.log10(data)
+        bins = np.linspace(np.log10(d['mi']),np.log10(d['ma']),30)
+        counts, bins = np.histogram(log_data, bins=bins)
+        norm = counts / data.size # PDF
+        ax.stairs(norm, bins, color='k', fill=True)
+        ax.set_yscale('log')
+        ax.set_ylabel('PDF')
+        ax.set_ylim(1e-6,1e-0)
+        ax.set_xlabel(r'log$_{\rm 10}$ $\frac{[O/H]}{[O/H]_{\odot}}$')
+        if not multiplot:
+            if radius is not None:
+                text='%s kpc' % radius
+                ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+            if rho is not None:
+                text2=r'$\rho$ = %2.1g' % rho
+                ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+        if not multiplot:
+            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+
     if data_type == 'DM':
         log_data = np.log10(data)
         bins = np.linspace(np.log10(d['mi']),np.log10(d['ma']),30)

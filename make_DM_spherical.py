@@ -98,10 +98,12 @@ def get_vals(xyz, ok, proj_matrix, sdir, snum, spectrum = False):
     vxyz = np.dot( proj_matrix , (load_fire_snap('Velocities',0,sdir,snum).take(ok,axis=0)).transpose() ); data_dict['vxyz'] = vxyz;
     # O/H = O / (mass - (metals + helium)
     metals =  load_fire_snap('Metallicity',0,sdir,snum).take(ok,axis=0);
-    O = metals[:,4]
-    He = metals[:,1]
-    Metals = metals[:,0]
-    O_H = O / (1. - (He + Metals)); data_dict['O_H'] = O_H;
+    O = metals.T[4]; data_dict['O'] = O
+    He = metals.T[1]
+    Metals = metals.T[0]
+    H = (1. - (He + Metals)); data_dict['H'] = H
+    O_H = O / (1. - (He + Metals)); data_dict['O_H'] = O_H; data_dict['Z'] = Metals;
+
     vol = load_fire_snap('Volume',0,sdir,snum).take(ok,axis=0); data_dict['vol'] = vol
     if 'CosmicRayEnergy' in load_fire_snap('Keys',0,sdir,snum):
         Ecr = load_fire_snap('CosmicRayEnergy',0,sdir,snum).take(ok,axis=0)
@@ -280,11 +282,12 @@ if __name__ == '__main__':
     f = h5py.File('proj.h5', 'w')
     NHgrp = f.create_group("NH")
     DMgrp = f.create_group("DM")
+    OHgrp = f.create_group("OH")
     if Bfields:
         RMgrp = f.create_group("RM")
 
     # Radial Filters in kpc
-    filter_r = [10,200,800]
+    filter_r = [800]
 
     grps = f.keys()
     for g in grps:
@@ -296,7 +299,7 @@ if __name__ == '__main__':
     #solar_gal_phi = 0
 
     # step through phi vals to probe diff locations in the solar circle
-    phis = np.linspace(0,2*np.pi,5, endpoint=False)
+    phis = np.linspace(0,2*np.pi,2, endpoint=False)
     phis_deg = phis * 180/np.pi
     for k, solar_gal_phi in enumerate(phis):
         solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
@@ -336,22 +339,28 @@ if __name__ == '__main__':
 
             lon -= np.pi*u.rad
 
-            Ne, NH, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+            Ne, NH, H = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
-                                                data['O_H'][filt]/(r**2),
+                                                data['H'][filt]*data['mass'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-            OH, mas, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                                data['mass'][filt]*data['O_H'][filt]/(r**2),
-                                                data['mass'][filt]/(r**2),
+            O, mas, Z_tot = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                                data['mass'][filt]*data['O'][filt]/(r**2),data['mass'][filt]/(r**2), 
+                                                data['Z'][filt]*data['mass'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
             # Make OH the mass-weighted O/H ratio
-            import pdb; pdb.set_trace()
-            OH /= mas
+            # import pdb; pdb.set_trace()
+
+            #OH /= mas; 
+            Z_tot /= mas
+            OH_solar = 10**-3.310 #Asplund 2009
+            Z_solar = 0.0142 #Asplund 2009
             NH *= unit_NH_spherical
             Ne *= unit_DM_spherical
             f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH)
             f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne)
+            f.create_dataset('/OH/%d/%d' % (filter_r[x], k), data=O/H)
+            f.create_dataset('/Z/%d/%d' % (filter_r[x], k), data=Z_tot)
 
             if Bfields:
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
@@ -367,7 +376,9 @@ if __name__ == '__main__':
                 #    angle=phis_deg[k])
                 plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k,
                     angle=phis_deg[k], multiplot=True)
-                plot_healpy(Ne, 'OH', radius=filter_r[x], rho=local_rho, num=k,
+                plot_healpy(O/H/OH_solar, 'OH', radius=filter_r[x], rho=local_rho, num=k,
+                    angle=phis_deg[k], multiplot=True)
+                plot_healpy(Z_tot/Z_solar, 'Z', radius=filter_r[x], rho=local_rho, num=k,
                     angle=phis_deg[k], multiplot=True)
             if Bfields:
                 plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k,
