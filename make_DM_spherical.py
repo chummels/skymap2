@@ -96,13 +96,12 @@ def get_vals(xyz, ok, proj_matrix, sdir, snum, spectrum = False):
     x_e  = load_fire_snap('ElectronAbundance',0,sdir,snum).take(ok,axis=0); data_dict['x_e'] = x_e;
     x_h  = load_fire_snap('NeutralHydrogenAbundance',0,sdir,snum).take(ok,axis=0); data_dict['x_h'] = x_h;
     vxyz = np.dot( proj_matrix , (load_fire_snap('Velocities',0,sdir,snum).take(ok,axis=0)).transpose() ); data_dict['vxyz'] = vxyz;
-    # O/H = O / (mass - (metals + helium)
     metals =  load_fire_snap('Metallicity',0,sdir,snum).take(ok,axis=0);
     O = metals.T[4]; data_dict['O'] = O
     He = metals.T[1]
     Metals = metals.T[0]
     H = (1. - (He + Metals)); data_dict['H'] = H
-    O_H = O / (1. - (He + Metals)); data_dict['O_H'] = O_H; data_dict['Z'] = Metals;
+    O_H = (O/16)/H; data_dict['O_H'] = O_H; data_dict['Z'] = Metals;
 
     vol = load_fire_snap('Volume',0,sdir,snum).take(ok,axis=0); data_dict['vol'] = vol
     if 'CosmicRayEnergy' in load_fire_snap('Keys',0,sdir,snum):
@@ -197,6 +196,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         sys.exit('Usage: %s dataset' % sys.argv[0])
     fn = sys.argv[1]
+    savedir = sys.argv[2]
 
     run_cartesian = False
     plot_cartesian = False
@@ -204,6 +204,7 @@ if __name__ == '__main__':
     plot_spherical = False
     plot_spherical_healpy = True
     plot_spherical_PDF = True
+    metals = True
     snum = 600
     xlen = 1000
     depth = 1000
@@ -279,7 +280,7 @@ if __name__ == '__main__':
     if not run_spherical: sys.exit()
 
     # Store all data in HDF5 file for later processing if desired
-    f = h5py.File('proj.h5', 'w')
+    f = h5py.File(savedir+'proj.h5', 'w')
     NHgrp = f.create_group("NH")
     DMgrp = f.create_group("DM")
     OHgrp = f.create_group("OH")
@@ -339,28 +340,34 @@ if __name__ == '__main__':
 
             lon -= np.pi*u.rad
 
-            Ne, NH, H = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+            Ne, NH, O  = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                                 data['mass'][filt]*data['x_e'][filt]/(r**2),
                                                 data['mass'][filt]*data['x_h'][filt]/(r**2),
-                                                data['H'][filt]*data['mass'][filt]/(r**2),
+                                                data['mass'][filt]*data['O'][filt]/(r**2),
                                                 xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
-            O, mas, Z_tot = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
-                                                data['mass'][filt]*data['O'][filt]/(r**2),data['mass'][filt]/(r**2), 
-                                                data['Z'][filt]*data['mass'][filt]/(r**2),
-                                                xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+
             # Make OH the mass-weighted O/H ratio
             # import pdb; pdb.set_trace()
+            if metals:
+                O_H, mas, Z_tot = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                                    data['mass'][filt]*data['O_H'][filt]/(r**2),data['mass'][filt]/(r**2), 
+                                    data['Z'][filt]*data['mass'][filt]/(r**2),
+                                    xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
+                O_H_solar = 10**-3.31 #Asplund 2009 Abundance
+                O_solar = 0.005768 #Asplund 2009 Mass Fraction
+                Z_solar = 0.0142 #Asplund 2009 Mass Fraction
+                O_H /= mas; #compute LOS averaged O/H (abundance)
+                O /= mas;  #LOS averaged O mass fraction
+                Z_tot /= mas #LOS total averaged metallicity
 
-            #OH /= mas; 
-            Z_tot /= mas
-            OH_solar = 10**-3.310 #Asplund 2009
-            Z_solar = 0.0142 #Asplund 2009
             NH *= unit_NH_spherical
             Ne *= unit_DM_spherical
             f.create_dataset('/NH/%d/%d' % (filter_r[x], k), data=NH)
             f.create_dataset('/DM/%d/%d' % (filter_r[x], k), data=Ne)
-            f.create_dataset('/OH/%d/%d' % (filter_r[x], k), data=O/H)
-            f.create_dataset('/Z/%d/%d' % (filter_r[x], k), data=Z_tot)
+            if metals:
+                f.create_dataset('/OH/%d/%d' % (filter_r[x], k), data=O_H)
+                f.create_dataset('/O/%d/%d' % (filter_r[x], k), data=O)
+                f.create_dataset('/Z/%d/%d' % (filter_r[x], k), data=Z_tot)
 
             if Bfields:
                 RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
@@ -374,14 +381,17 @@ if __name__ == '__main__':
             if plot_spherical_healpy:
                 #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k,
                 #    angle=phis_deg[k])
-                plot_healpy(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k,
+                plot_healpy(Ne, 'DM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
                     angle=phis_deg[k], multiplot=True)
-                plot_healpy(O/H/OH_solar, 'OH', radius=filter_r[x], rho=local_rho, num=k,
-                    angle=phis_deg[k], multiplot=True)
-                plot_healpy(Z_tot/Z_solar, 'Z', radius=filter_r[x], rho=local_rho, num=k,
-                    angle=phis_deg[k], multiplot=True)
+                if metals:    
+                    plot_healpy(O_H/O_H_solar, 'OH', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                        angle=phis_deg[k], multiplot=True)
+                    plot_healpy(Z_tot/Z_solar, 'Z', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                        angle=phis_deg[k], multiplot=True)
+                    plot_healpy(O/O_solar, 'O', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                        angle=phis_deg[k], multiplot=True)    
             if Bfields:
-                plot_healpy(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k,
+                plot_healpy(RM, 'RM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
                     angle=phis_deg[k])
 
             # Create Prob Dist Func plots
@@ -401,14 +411,14 @@ if __name__ == '__main__':
                 plt.ylabel(r'latitude [rad]')
                 plt.xlabel(r'longitude [rad]')
                 plt.colorbar(label=r'log$_{10}$ DM [pc cm$^{-3}$]')
-                plt.savefig('Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x],k))
+                plt.savefig(savedir+'Ne_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen,depth,filter_r[x],k))
                 plt.clf()
                 plt.imshow(np.log10(NH*unit_NH_spherical), extent=[-np.pi,
                         np.pi, -np.pi/2, np.pi/2], cmap='inferno')
                 plt.ylabel(r'latitude [rad]')
                 plt.xlabel(r'longitude [rad]')
                 plt.colorbar(label=r'log$_{10}$ N$_{\rm H}$ [cm$^{-2}$]')
-                plt.savefig('NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
+                plt.savefig(savedir+'NH_{}_kpc_{}_depth_spherical_{}_{}.png'.format(xlen, depth,filter_r[x],k))
                 plt.clf()
                 plt.close('all')
     f.close()

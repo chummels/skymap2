@@ -37,26 +37,34 @@ def get_plot_presets(type_of_plot):
         unit='RM [rad m$^{-2}$]'
         cbar_ticks=[-1000, -100, -10, 0, 10, 100, 1000]
     elif type_of_plot == 'OH':
-        mi = 0.05
-        ma = 10
+        mi = 0.005
+        ma = 3
         cmap = mpl.cm.viridis
         norm = 'log'
         unit=r'$\frac{[O/H]}{[O/H]_{\odot}}$'
-        cbar_ticks=[0.05,0.1,0.2,0.3,0.4,0.5,0.5,1,5,10]
+        cbar_ticks=[0.05,0.1,0.3,0.5,0.5,1,3]
+
+    elif type_of_plot == 'O':
+        mi = 0.005
+        ma = 3
+        cmap = mpl.cm.viridis
+        norm = 'log'
+        unit=r'$\frac{Z_{O}}{Z_{O,\odot}}$'
+        cbar_ticks=[0.01,0.1,0.3,0.5,0.5,1,3]    
     elif type_of_plot == 'Z':
         mi = 0.05
-        ma = 10
+        ma = 3
         cmap = mpl.cm.viridis
         norm = 'log'
         unit=r'$\frac{[Z]}{[Z]_{\odot}}$'
-        cbar_ticks=[0.05,0.1,0.2,0.3,0.4,0.5,0.5,1,5,10]    
+        cbar_ticks=[0.05,0.1,0.3,0.5,1,3]    
     else:
         sys.exit('%s is not a recognized type of plot' % type_of_plot)
 
     d = dict(mi=mi, ma=ma, cmap=cmap, norm=norm, unit=unit, cbar_ticks=cbar_ticks)
     return d
 
-def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0, multiplot=False):
+def plot_healpy(data, data_type, savedir='./', radius=None, rho=None, num=None, angle=0, multiplot=False):
     """
     Create healpy plot for dataset data
     """
@@ -90,7 +98,7 @@ def plot_healpy(data, data_type, radius=None, rho=None, num=None, angle=0, multi
     if multiplot:
         plot_PDF(data, data_type, radius=radius, rho=rho, num=num, multiplot=True)
         plt.tight_layout()
-    plt.savefig('%s_%d_%02d.png' % (data_type, radius, num))
+    plt.savefig(savedir+'%s_%d_%02d.png' % (data_type, radius, num))
     plt.close('all')
 
 def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
@@ -124,7 +132,7 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
                 ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
                         weight='heavy', color='k', transform=ax.transAxes)
         if not multiplot:
-            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+            plt.savefig(savedir+'%s_%d_%d_PDF.png' % (data_type, radius, num))
 
 
     if data_type == 'OH':
@@ -147,7 +155,29 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
                 ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
                         weight='heavy', color='k', transform=ax.transAxes)
         if not multiplot:
-            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+            plt.savefig(savedir+'%s_%d_%d_PDF.png' % (data_type, radius, num))
+
+    if data_type == 'O':
+        log_data = np.log10(data)
+        bins = np.linspace(np.log10(d['mi']),np.log10(d['ma']),30)
+        counts, bins = np.histogram(log_data, bins=bins)
+        norm = counts / data.size # PDF
+        ax.stairs(norm, bins, color='k', fill=True)
+        ax.set_yscale('log')
+        ax.set_ylabel('PDF')
+        ax.set_ylim(1e-6,1e-0)
+        ax.set_xlabel(r'log$_{\rm 10}$ $\frac{[O/H]}{[O/H]_{\odot}}$')
+        if not multiplot:
+            if radius is not None:
+                text='%s kpc' % radius
+                ax.text(0.05, 0.94, text, horizontalalignment='left', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+            if rho is not None:
+                text2=r'$\rho$ = %2.1g' % rho
+                ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
+                        weight='heavy', color='k', transform=ax.transAxes)
+        if not multiplot:
+            plt.savefig(savedir+'%s_%d_%d_PDF.png' % (data_type, radius, num))        
 
     if data_type == 'DM':
         log_data = np.log10(data)
@@ -169,5 +199,5 @@ def plot_PDF(data, data_type, radius=None, rho=None, num=None, multiplot=False):
                 ax.text(0.95, 0.94, text2, horizontalalignment='right', size=14,
                         weight='heavy', color='k', transform=ax.transAxes)
         if not multiplot:
-            plt.savefig('%s_%d_%d_PDF.png' % (data_type, radius, num))
+            plt.savefig(savedir+'%s_%d_%d_PDF.png' % (data_type, radius, num))
     return
