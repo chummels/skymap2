@@ -193,7 +193,7 @@ def sph2cart(az, el, r):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         sys.exit('Usage: %s dataset' % sys.argv[0])
     fn = sys.argv[1]
     savedir = sys.argv[2]
