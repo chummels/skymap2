@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import astropy.units as u
 import sys
+import os
 import h5py
 from gizmopy.load_from_snapshot import \
     load_from_snapshot
@@ -158,18 +159,17 @@ def B_spherical(data,filt):
     pos = data['xyz'].T[filt].T
     rs = np.linalg.norm(pos,axis=0)
     B_spherical = []
-
-    for i in range(len(pos[0])):
-        y = pos[1][i]; x = pos[0][i]; z = pos[2][i]
-        r = rs[i]
-        theta = np.arctan2(np.sqrt(np.power(x,2)+np.power(y,2)),z)
-        phi = np.arctan2(y,x)
-        spherical_transform_matrix = np.array([[np.sin(theta)*np.cos(phi),np.sin(theta)*np.sin(phi),np.cos(theta)],
-                                               [np.cos(theta)*np.cos(phi),np.cos(theta)*np.sin(phi),-np.sin(theta)],
-                                               [-np.sin(phi),np.cos(phi),0]])
-
-        B_spherical.append( np.dot(spherical_transform_matrix,data['Bxyz'].T[filt][i]))
-    return(np.array(B_spherical).T)
+    theta = np.arctan2(np.sqrt(np.power(data['xyz'][0],2)+np.power(data['xyz'][1],2)),data['xyz'][2])
+    phi = np.arctan2(data['xyz'][1],data['xyz'][0])
+    matrices = []
+    for i in range(len(rs)):
+        spherical_transform_matrix = np.array([[np.sin(theta[i])*np.cos(phi[i]),np.sin(theta[i])*np.sin(phi[i]),np.cos(theta[i])],
+                                                [np.cos(theta[i])*np.cos(phi[i]),np.cos(theta[i])*np.sin(phi[i]),-np.sin(theta[i])],
+                                                [-np.sin(phi[i]),np.cos(phi[i]),0]])
+        matrices.append(spherical_transform_matrix)    
+    
+    B_spherical = np.array(list(map(lambda A,x: np.dot(A,x),matrices, Bxyz.T))).T
+    return(B_spherical)
 
 def cart2sph(x, y, z):
     """
@@ -197,9 +197,15 @@ if __name__ == '__main__':
         sys.exit('Usage: %s dataset' % sys.argv[0])
     fn = sys.argv[1]
     savedir = sys.argv[2]
+    if not os.path.isdir(savedir):
+        os.makedirs(savedir)        
+        print('made directory') 
+
+    print('save directory exists')
+
 
     run_cartesian = False
-    plot_cartesian = False
+    plot_cartesian = True
     run_spherical = True
     plot_spherical = False
     plot_spherical_healpy = True
@@ -244,8 +250,8 @@ if __name__ == '__main__':
 
         if Bfields:
             if TF is None:
-                RM, _, _ = construct_weighted2dmap(data['xyz'][0][TF], data['xyz'][1][TF],
-                                                data['hsml'][TF], data['mass']*data['x_e']*data['Bxyz'][2],
+                RM, _, _ = construct_weighted2dmap(data['xyz'][0], data['xyz'][1],
+                                                data['hsml'], data['mass']*data['x_e']*data['Bxyz'][2],
                                                 xlen=xlen, set_aspect_ratio=1.0, pixels=512)
                 np.save('RM_{}_kpc_{}_depth.npy'.format(xlen, depth), RM*unit_RM)
             else:
@@ -258,8 +264,8 @@ if __name__ == '__main__':
         if plot_cartesian:
             plt.figure()
             plt.imshow(np.log10(Ne.T*unit_DM),
-                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
-                extent=[-10, 10, -10, 10], cmap='inferno')
+                extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+                # extent=[-10, 10, -10, 10], cmap='inferno')
             plt.xlabel(r'x [kpc]')
             plt.ylabel(r'y [kpc]')
             plt.colorbar(label=r'log $_{10}$DM [pc cm$^{-3}$]')
@@ -267,8 +273,8 @@ if __name__ == '__main__':
             plt.clf()
 
             plt.imshow(np.log10(NH.T*unit_NH),
-                #extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
-                extent=[-10, 10, -10, 10], cmap='inferno')
+                extent=[-xlen, xlen, -xlen, xlen], cmap='inferno')
+                # extent=[-10, 10, -10, 10], cmap='inferno')
             plt.xlabel(r'x [kpc]')
             plt.ylabel(r'y [kpc]')
             plt.colorbar(label=r'log $_{10}$N$_{\rm H}$ [cm$^{-2}$]')
@@ -300,7 +306,7 @@ if __name__ == '__main__':
     #solar_gal_phi = 0
 
     # step through phi vals to probe diff locations in the solar circle
-    phis = np.linspace(0,2*np.pi,2, endpoint=False)
+    phis = np.linspace(0,2*np.pi,5, endpoint=False)
     phis_deg = phis * 180/np.pi
     for k, solar_gal_phi in enumerate(phis):
         solar_circ_vec = sph2cart(solar_gal_phi, solar_gal_theta, solar_gal_r)
@@ -370,7 +376,7 @@ if __name__ == '__main__':
                 f.create_dataset('/Z/%d/%d' % (filter_r[x], k), data=Z_tot)
 
             if Bfields:
-                RM = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
+                RM, _, _ = construct_weighted2dmap(lat, lon, data['hsml'][filt]/r,
                                             Br*data['mass'][filt]*data['x_e'][filt]/(r**2),
                                             xlen=np.pi/2, set_aspect_ratio=2.0, pixels=512)
                 RM *= unit_RM
@@ -390,9 +396,9 @@ if __name__ == '__main__':
                         angle=phis_deg[k], multiplot=True)
                     plot_healpy(O/O_solar, 'O', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
                         angle=phis_deg[k], multiplot=True)    
-            if Bfields:
-                plot_healpy(RM, 'RM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
-                    angle=phis_deg[k])
+            # if Bfields:
+            #     plot_healpy(RM, 'RM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+            #         angle=phis_deg[k])
 
             # Create Prob Dist Func plots
             if plot_spherical_PDF:
