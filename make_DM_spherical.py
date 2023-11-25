@@ -6,6 +6,7 @@ import astropy.units as u
 import sys
 import os
 import h5py
+from fast_map import fast_map
 from gizmopy.load_from_snapshot import \
     load_from_snapshot
 from gizmopy.load_fire_snap import \
@@ -168,7 +169,7 @@ def B_spherical(data,filt):
                                                 [-np.sin(phi[i]),np.cos(phi[i]),0]])
         matrices.append(spherical_transform_matrix)    
     
-    B_spherical = np.array(list(map(lambda A,x: np.dot(A,x),matrices, Bxyz.T))).T
+    B_spherical = np.array(list(fast_map(lambda A,x: np.dot(A,x),matrices, Bxyz.T))).T
     return(B_spherical)
 
 def cart2sph(x, y, z):
