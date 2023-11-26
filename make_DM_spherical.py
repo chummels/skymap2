@@ -158,6 +158,7 @@ def loadData(path_input, snum, spectrum=False, xlen=30, depth=200, edgeon=False)
 def B_spherical(data,filt):
     '''Given a dictionary containing at least the position and magnetic field data, return the spherical (r,theta,phi) components'''
     pos = data['xyz'].T[filt].T
+    Bxyz = data['Bxyz'].T[filt].T
     rs = np.linalg.norm(pos,axis=0)
     B_spherical = []
     theta = np.arctan2(np.sqrt(np.power(data['xyz'][0],2)+np.power(data['xyz'][1],2)),data['xyz'][2])
@@ -169,7 +170,7 @@ def B_spherical(data,filt):
                                                 [-np.sin(phi[i]),np.cos(phi[i]),0]])
         matrices.append(spherical_transform_matrix)    
     
-    B_spherical = np.array(list(fast_map(lambda A,x: np.dot(A,x),matrices, Bxyz.T))).T
+    B_spherical = np.array(list(fast_map(lambda A,x: np.dot(A,x),matrices, Bxyz.T,threads_limit=100))).T
     return(B_spherical)
 
 def cart2sph(x, y, z):
