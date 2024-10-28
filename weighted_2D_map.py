@@ -32,7 +32,7 @@ def construct_weighted2dmap( x, y, hsml, weight, weight2=0, weight3=0,
     smooth_routine=ctypes.cdll[exec_call];
     ## make sure values to be passed are in the right format
     N=checklen(x); x=fcor(x); y=fcor(y); M1=fcor(weight); M2=fcor(weight2); M3=fcor(weight3); H=fcor(hsml)
-    xpixels=np.int(xpixels); ypixels=np.int(ypixels)
+    xpixels=np.int32(xpixels); ypixels=np.int32(ypixels)
     ## check for whether the optional extra weights are set
     NM=1;
     if(checklen(M2)==checklen(M1)):
