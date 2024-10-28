@@ -193,12 +193,21 @@ def sph2cart(az, el, r):
     z = r * np.sin(el)
     return np.array([x, y, z])
 
+
 if __name__ == '__main__':
 
+    # dataset: m12i_r1700/output
+    # with snapdir_XXX present
+    # where XXX = $snum (see below)
+    # $ python make_DM_spherical.py m12i_r7100/output .
+
     if len(sys.argv) != 3:
-        sys.exit('Usage: %s dataset' % sys.argv[0])
+        sys.exit('Usage: %s dataset savedir' % sys.argv[0])
     fn = sys.argv[1]
     savedir = sys.argv[2]
+    print("")
+    print("Running on %s" % sys.argv[1])
+    print("")
     if not os.path.isdir(savedir):
         os.makedirs(savedir)        
         print('made directory') 
@@ -212,7 +221,7 @@ if __name__ == '__main__':
     plot_spherical = False
     plot_spherical_healpy = True
     plot_spherical_PDF = True
-    metals = True
+    metals = False
     snum = 600
     xlen = 1000
     depth = 1000
@@ -232,8 +241,8 @@ if __name__ == '__main__':
         Bfields = False
 
     # Temperature filter for hot DM
-    TF = np.where(data['T']>10**5.5)
-    #TF = None
+    #TF = np.where(data['T']>10**5.5)
+    TF = None
     if run_cartesian:
 
         if TF is not None:
@@ -296,7 +305,7 @@ if __name__ == '__main__':
         RMgrp = f.create_group("RM")
 
     # Radial Filters in kpc
-    filter_r = [800]
+    filter_r = [20, 200, 1000]
 
     grps = f.keys()
     for g in grps:
