@@ -333,11 +333,11 @@ if __name__ == '__main__':
 
         # Calculate local density by taking total mass within 200 pc / volume
 
-        local_rad = 0.2 # kpc
-        local = np.where(cartesian_radii < local_rad)
-        #local_rho = np.mean(data['rho'][local])
-        local_rho = np.sum(data['mass'][local]) / ((4./3.) * np.pi * local_rad**3)
-        print("Local density: %2.1g" % local_rho)
+        #local_rad = 0.2 # kpc
+        #local = np.where(cartesian_radii < local_rad)
+        ##local_rho = np.mean(data['rho'][local])
+        #local_rho = np.sum(data['mass'][local]) / ((4./3.) * np.pi * local_rad**3)
+        #print("Local density: %2.1g" % local_rho)
 
         # If temperature filter exists then use it
         if TF is not None:
@@ -398,26 +398,26 @@ if __name__ == '__main__':
             if plot_spherical_healpy:
                 #plot_healpy(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k,
                 #    angle=phis_deg[k])
-                plot_healpy(Ne, 'DM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                plot_healpy(Ne, 'DM',savedir = savedir, radius=filter_r[x], num=k,
                     angle=phis_deg[k], multiplot=True)
                 if metals:    
-                    plot_healpy(O_H/O_H_solar, 'OH', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                    plot_healpy(O_H/O_H_solar, 'OH', savedir = savedir, radius=filter_r[x], num=k,
                         angle=phis_deg[k], multiplot=True)
-                    plot_healpy(Z_tot/Z_solar, 'Z', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                    plot_healpy(Z_tot/Z_solar, 'Z', savedir = savedir, radius=filter_r[x], num=k,
                         angle=phis_deg[k], multiplot=True)
-                    plot_healpy(O/O_solar, 'O', savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+                    plot_healpy(O/O_solar, 'O', savedir = savedir, radius=filter_r[x], num=k,
                         angle=phis_deg[k], multiplot=True)    
             # if Bfields:
-            #     plot_healpy(RM, 'RM',savedir = savedir, radius=filter_r[x], rho=local_rho, num=k,
+            #     plot_healpy(RM, 'RM',savedir = savedir, radius=filter_r[x], num=k,
             #         angle=phis_deg[k])
 
             # Create Prob Dist Func plots
             if plot_spherical_PDF:
-                #plot_PDF(NH, 'NH', radius=filter_r[x], rho=local_rho, num=k)
-                #plot_PDF(Ne, 'DM', radius=filter_r[x], rho=local_rho, num=k)
+                #plot_PDF(NH, 'NH', radius=filter_r[x], num=k)
+                #plot_PDF(Ne, 'DM', radius=filter_r[x], num=k)
                 pass
             if Bfields:
-                #plot_PDF(RM, 'RM', radius=filter_r[x], rho=local_rho, num=k)
+                #plot_PDF(RM, 'RM', radius=filter_r[x], num=k)
                 pass
 
             # Create non-healpy image in spherical coords
